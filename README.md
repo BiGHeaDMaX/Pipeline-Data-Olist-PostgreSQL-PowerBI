@@ -238,3 +238,7 @@ Une courte démonstration vidéo est disponible dans :
 ```text
 docs/demo/dashboard_demo.mp4
 ```
+
+## Article associé
+
+Retrouvez l'article de présentation de ce projet [ici](https://bigheadmax.github.io/09-pipeline-postgresql-powerbi.html).
