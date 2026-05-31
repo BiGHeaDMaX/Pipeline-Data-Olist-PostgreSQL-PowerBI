@@ -1,0 +1,14 @@
+# Raw data files are not versioned.
+# The Olist CSV files must be downloaded separately
+# and placed locally in data/raw/.
+# This keeps the repository lightweight and avoids committing large datasets.
+data/raw/
+*.csv
+
+# Logs / temporary files
+*.log
+*.tmp
+
+# Power BI temporary/cache files
+*.pbitmp
+~$*
