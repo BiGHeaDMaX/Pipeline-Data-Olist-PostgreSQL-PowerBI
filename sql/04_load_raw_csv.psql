@@ -1,0 +1,119 @@
+-- Chargement des fichiers CSV dans leurs tables
+-- TRUNCATE pour vider les tables en cas de rechargement
+-- Forcer UTF8 (WIN1252 par défaut), sinon le fichier reviews va poser problème
+\encoding UTF8
+
+-- olist_orders_dataset.csv
+TRUNCATE raw.orders;
+\copy raw.orders FROM '../data/raw/olist_orders_dataset.csv' DELIMITER ',' CSV HEADER
+
+-- olist_order_items_dataset.csv
+TRUNCATE raw.order_items;
+\copy raw.order_items FROM '../data/raw/olist_order_items_dataset.csv' DELIMITER ',' CSV HEADER
+
+-- olist_customers_dataset.csv
+TRUNCATE raw.customers;
+\copy raw.customers FROM '../data/raw/olist_customers_dataset.csv' DELIMITER ',' CSV HEADER
+
+-- olist_products_dataset.csv
+TRUNCATE raw.products;
+\copy raw.products FROM '../data/raw/olist_products_dataset.csv' DELIMITER ',' CSV HEADER
+
+-- olist_sellers_dataset.csv
+TRUNCATE raw.sellers;
+\copy raw.sellers FROM '../data/raw/olist_sellers_dataset.csv' DELIMITER ',' CSV HEADER
+
+-- olist_order_payments_dataset.csv
+TRUNCATE raw.order_payments;
+\copy raw.order_payments FROM '../data/raw/olist_order_payments_dataset.csv' DELIMITER ',' CSV HEADER
+
+-- olist_order_reviews_dataset.csv
+TRUNCATE raw.order_reviews;
+\copy raw.order_reviews FROM '../data/raw/olist_order_reviews_dataset.csv' DELIMITER ',' CSV HEADER
+
+-- olist_geolocation_dataset.csv
+TRUNCATE raw.geolocation;
+\copy raw.geolocation FROM '../data/raw/olist_geolocation_dataset.csv' DELIMITER ',' CSV HEADER
+
+-- product_category_name_translation.csv
+TRUNCATE raw.product_category_name_translation;
+\copy raw.product_category_name_translation FROM '../data/raw/product_category_name_translation.csv' DELIMITER ',' CSV HEADER
+
+
+----------------------------------------
+--           Quality checks           --
+----------------------------------------
+-- On va faire quelques tests de qualité
+-- et logger dans notre table dq.check_results.
+-- Ici on ne bloque rien, les contraintes seront mises
+-- au niveau de la couche STG.
+
+-- Ici c'est un test simple : des lignes ont-elles été chargées ?
+INSERT INTO dq.check_results (layer, table_name, check_name, row_count, status)
+SELECT
+  -- On ne renseigne pas run_ts, on laisse le default faire son travail
+  'raw' AS layer,
+  t.table_name,
+  'rows_loaded' AS check_name,
+  t.row_count::int AS row_count,
+  CASE WHEN t.row_count > 0 THEN 'OK' ELSE 'FAIL' END AS status
+FROM (
+  SELECT 'orders' AS table_name, COUNT(*) AS row_count FROM raw.orders
+  UNION ALL SELECT 'order_items', COUNT(*) FROM raw.order_items
+  UNION ALL SELECT 'customers', COUNT(*) FROM raw.customers
+  UNION ALL SELECT 'products', COUNT(*) FROM raw.products
+  UNION ALL SELECT 'sellers', COUNT(*) FROM raw.sellers
+  UNION ALL SELECT 'order_payments', COUNT(*) FROM raw.order_payments
+  UNION ALL SELECT 'order_reviews', COUNT(*) FROM raw.order_reviews
+  UNION ALL SELECT 'geolocation', COUNT(*) FROM raw.geolocation
+  UNION ALL SELECT 'category_translation', COUNT(*) FROM raw.product_category_name_translation
+) t;
+
+-- Null sur order_id dans orders
+INSERT INTO dq.check_results (layer, table_name, check_name, row_count, status)
+SELECT
+  'raw',
+  'orders',
+  'null_order_id',
+  COUNT(*),
+  CASE WHEN COUNT(*) = 0 THEN 'OK' ELSE 'FAIL' END
+FROM raw.orders
+WHERE order_id IS NULL;
+
+-- Doublons order_id dans orders
+INSERT INTO dq.check_results (layer, table_name, check_name, row_count, status)
+SELECT
+  'raw',
+  'orders',
+  'duplicate_order_id',
+  COUNT(*),
+  CASE WHEN COUNT(*) = 0 THEN 'OK' ELSE 'WARN' END
+FROM (
+  SELECT order_id
+  FROM raw.orders
+  GROUP BY order_id
+  HAVING COUNT(*) > 1
+) d;
+
+-- Null customer_id dans customers
+INSERT INTO dq.check_results (layer, table_name, check_name, row_count, status)
+SELECT
+  'raw',
+  'customers',
+  'null_customer_id',
+  COUNT(*),
+  CASE WHEN COUNT(*) = 0 THEN 'OK' ELSE 'FAIL' END
+FROM raw.customers
+WHERE customer_id IS NULL;
+
+-- outliers review_score dans order_reviews
+INSERT INTO dq.check_results (layer, table_name, check_name, row_count, status)
+SELECT
+  'raw',
+  'order_reviews',
+  'invalid_review_score',
+  COUNT(*),
+  CASE WHEN COUNT(*) = 0 THEN 'OK' ELSE 'WARN' END
+FROM raw.order_reviews
+-- Ici on teste avec regex car au layer raw on est encore en TEXT
+WHERE review_score !~ '^[1-5]$';

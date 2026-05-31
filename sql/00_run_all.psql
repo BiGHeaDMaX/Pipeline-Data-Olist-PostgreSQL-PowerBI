@@ -1,0 +1,32 @@
+\echo '======================================'
+\echo ' Running Olist Data Pipeline'
+\echo '======================================'
+
+\echo ''
+\echo '1. Creating schemas...'
+\i '01_create_schemas.sql'
+
+\echo ''
+\echo '2. Creating DQ tables...'
+\i '02_create_dq_checks_table.sql'
+
+\echo ''
+\echo '3. Creating RAW tables...'
+\i '03_create_raw_tables.sql'
+
+\echo ''
+\echo '4. Loading RAW CSV files...'
+\i '04_load_raw_csv.psql'
+
+\echo ''
+\echo '5. Building STG layer...'
+\i '05_build_stg.sql'
+
+\echo ''
+\echo '6. Building DWH layer...'
+\i '06_build_dwh.sql'
+
+\echo ''
+\echo '======================================'
+\echo ' Pipeline completed successfully'
+\echo '======================================'
