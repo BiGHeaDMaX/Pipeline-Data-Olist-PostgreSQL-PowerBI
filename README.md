@@ -64,7 +64,23 @@ data/raw/
 ## Structure du repository
 
 ```text
-olist-data-pipeline/
+Pipeline-Data-Olist-PostgreSQL-PowerBI/
+│
+├── docs/
+│   ├── demo/
+│   │   ├── dashboard_demo.gif
+│   │   └── dashboard_demo.mp4
+│   │
+│   └── screenshots/
+│       ├── 01_executive_overview.png
+│       ├── 02_operations_customers.png
+│       ├── 03_products_sellers.png
+│       ├── 04_star_model.png
+│       └── 05_dq_table.png
+│
+├── powerbi/
+│   ├── olist_dashboard.pbix
+│   └── olist_dashboard.pdf
 │
 ├── sql/
 │   ├── 00_run_all.psql
@@ -75,23 +91,9 @@ olist-data-pipeline/
 │   ├── 05_build_stg.sql
 │   └── 06_build_dwh.sql
 │
-├── powerbi/
-│   └── olist_dashboard.pbix
-│   └── olist_dashboard.pdf
-docs/
-├── screenshots/
-│   ├── 01_executive_overview.png
-│   ├── 02_operations_customers.png
-│   ├── 03_products_sellers.png
-│   ├── 04_star_model.png
-│   └── 05_dq_table.png
-│
-└── demo/
-│   └── dashboard_demo.mp4
-│   └── dashboard_demo.gif
-│
-├── README.md
-└── .gitignore
+├── .gitignore
+├── LICENSE
+└── README.md
 ```
 
 ---
